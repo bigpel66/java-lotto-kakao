@@ -24,13 +24,44 @@ public final class ConsoleView {
         System.out.println("구입금액을 입력해 주세요.");
     }
 
+
+    public static List<Lotto> manualIssue() {
+        int manualCount = getManualCount();
+        return getManualLottos(manualCount);
+    }
+
+    private static int getManualCount() {
+        printManualCountPrompt();
+        SCANNER.nextLine();
+        return SCANNER.nextInt();
+    }
+
+    private static void printManualCountPrompt() {
+        System.out.println();
+        System.out.println("수동으로 구매할 로또 수를 입력해 주세요.");
+    }
+
+    private static List<Lotto> getManualLottos(int manualCount) {
+        printManualLottosPrompt();
+        SCANNER.nextLine();
+        return IntStream.range(0, manualCount)
+                .mapToObj(e -> Lotto.of(getNumbers()))
+                .collect(Collectors.toList());
+    }
+
+    private static void printManualLottosPrompt() {
+        System.out.println();
+        System.out.println("수동으로 구매할 번호를 입력해 주세요.");
+    }
+
     public static void printBoughtLottosPrompt(LottoGame game) {
-        printBunchSizePrompt(game.lottos().bunch().size());
+        printBunchSizePrompt(game.manualCount(), game.autoCount());
         printLottosNumbersPrompt(game.lottos());
     }
 
-    private static void printBunchSizePrompt(int bunchSize) {
-        System.out.println(bunchSize + "개 구매했습니다.");
+    private static void printBunchSizePrompt(int manualCount, int autoCount) {
+        System.out.println();
+        System.out.println("수동으로 " + manualCount + "장, 자동으로 " + autoCount + "개를 구매했습니다.");
     }
 
     private static void printLottosNumbersPrompt(Lottos lottos) {
@@ -47,15 +78,18 @@ public final class ConsoleView {
 
     public static List<Integer> getWinningNumbers() {
         printWinningNumbersPrompt();
-        SCANNER.nextLine();
-        String next = SCANNER.nextLine();
-        return Arrays.stream(next.split(", "))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
+        return getNumbers();
     }
 
     private static void printWinningNumbersPrompt() {
         System.out.println("지난 주 당첨 번호를 입력해 주세요.");
+    }
+
+    private static List<Integer> getNumbers() {
+        String next = SCANNER.nextLine();
+        return Arrays.stream(next.split(", "))
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
     }
 
     public static int getWinningBonus() {
@@ -94,7 +128,7 @@ public final class ConsoleView {
         if (rank == Lotto.RANK_USING_BONUS) {
             return (Lotto.LENGTH - 1) + "개 일치, 보너스 볼 일치 ";
         }
-        return (Lotto.LENGTH - (rank - Lotto.RANK_USING_BONUS) - 1) + "개 일치";
+        return (Lotto.LENGTH - (rank - Lotto.RANK_USING_BONUS)) + "개 일치";
     }
 
     private static int filterRanksCount(List<Rank> ranks, int rank) {
