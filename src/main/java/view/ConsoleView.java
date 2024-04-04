@@ -5,10 +5,7 @@ import domain.Lotto;
 import domain.Lottos;
 import enumeration.Rank;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -17,7 +14,7 @@ public final class ConsoleView {
 
     public static int getCash() {
         printCashPrompt();
-        return SCANNER.nextInt();
+        return scanInteger();
     }
 
     private static void printCashPrompt() {
@@ -32,8 +29,8 @@ public final class ConsoleView {
 
     private static int getManualCount() {
         printManualCountPrompt();
-        SCANNER.nextLine();
-        return SCANNER.nextInt();
+        ignoreScanLine();
+        return scanInteger();
     }
 
     private static void printManualCountPrompt() {
@@ -42,11 +39,16 @@ public final class ConsoleView {
     }
 
     private static List<Lotto> getManualLottos(int manualCount) {
-        printManualLottosPrompt();
-        SCANNER.nextLine();
-        return IntStream.range(0, manualCount)
-                .mapToObj(e -> Lotto.of(getNumbers()))
-                .collect(Collectors.toList());
+        try {
+            printManualLottosPrompt();
+            ignoreScanLine();
+            return IntStream.range(0, manualCount)
+                    .mapToObj(e -> Lotto.of(scanNumbers()))
+                    .collect(Collectors.toList());
+        } catch (IllegalStateException ex) {
+            System.out.println("[Error] 로또 숫자는 중복 없이 입력되어야 합니다.");
+            return getManualLottos(manualCount);
+        }
     }
 
     private static void printManualLottosPrompt() {
@@ -78,23 +80,16 @@ public final class ConsoleView {
 
     public static List<Integer> getWinningNumbers() {
         printWinningNumbersPrompt();
-        return getNumbers();
+        return scanNumbers();
     }
 
     private static void printWinningNumbersPrompt() {
         System.out.println("지난 주 당첨 번호를 입력해 주세요.");
     }
 
-    private static List<Integer> getNumbers() {
-        String next = SCANNER.nextLine();
-        return Arrays.stream(next.split(", "))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
-    }
-
     public static int getWinningBonus() {
         printWinningBonusPrompt();
-        return SCANNER.nextInt();
+        return scanInteger();
     }
 
     private static void printWinningBonusPrompt() {
@@ -143,5 +138,39 @@ public final class ConsoleView {
 
     private static void printProfitRate(double prize, double cash) {
         System.out.printf("총 수익률은 %.2f 입니다.\n", prize / cash);
+    }
+
+    private static void ignoreScanLine() {
+        SCANNER.nextLine();
+    }
+
+    private static List<Integer> scanNumbers() {
+        try {
+            String next = SCANNER.nextLine();
+            List<Integer> numbers = Arrays.stream(next.split(", "))
+                    .map(Integer::parseInt)
+                    .collect(Collectors.toList());
+            validateNumbers(numbers);
+            return numbers;
+        } catch (NumberFormatException | InputMismatchException ex) {
+            System.out.println("[Error] 쉼표와 띄어쓰기로 구분된 숫자 " + Lotto.LENGTH + "자로 구성되어야 합니다.");
+            return scanNumbers();
+        }
+    }
+
+    private static void validateNumbers(List<Integer> numbers) {
+        if (numbers.size() != Lotto.LENGTH) {
+            throw new InputMismatchException("로또 길이가 일치하지 않습니다.");
+        }
+    }
+
+    private static int scanInteger() {
+        try {
+            return SCANNER.nextInt();
+        } catch (InputMismatchException ex) {
+            System.out.println("[Error] 정수로 입력해야합니다.");
+            ignoreScanLine();
+            return scanInteger();
+        }
     }
 }
