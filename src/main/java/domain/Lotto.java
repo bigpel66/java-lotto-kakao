@@ -1,7 +1,9 @@
 package domain;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class Lotto {
@@ -14,18 +16,31 @@ public final class Lotto {
     public static final int RANK_USING_BONUS = 2;
 
     private final List<LottoNumber> numbers;
+    private final Set<LottoNumber> container;
 
     private Lotto(List<Integer> values) {
-        Objects.requireNonNull(values);
+        validateValues(values);
         this.numbers = values.stream().map(LottoNumber::of).sorted().collect(Collectors.toUnmodifiableList());
+        this.container = new HashSet<>(numbers);
     }
 
     public static Lotto of(List<Integer> values) {
         return new Lotto(values);
     }
 
+    private void validateValues(List<Integer> values) {
+        Objects.requireNonNull(values);
+        if (new HashSet<>(values).size() != values.size()) {
+            throw new IllegalStateException("중복된 숫자는 로또 숫자로 입력될 수 없습니다.");
+        }
+    }
+
     public List<LottoNumber> numbers() {
         return numbers;
+    }
+
+    public boolean containsNumber(LottoNumber number) {
+        return container.contains(number);
     }
 
     @Override
